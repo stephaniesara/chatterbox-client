@@ -1,5 +1,3 @@
-// >'>"><img src=x onerror=alert(0)>
-
 class App {
   constructor() {
     this.server = 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages';
@@ -15,7 +13,7 @@ class App {
     $.ajax({
       url: this.server,
       type: 'POST',
-      data: JSON.stringify(message),
+      data: message,
       contentType: 'application/json',
       success: function (data) {
         console.log('chatterbox: Message sent');
@@ -25,10 +23,9 @@ class App {
         console.error('chatterbox: Failed to send message', data);
       }
     });
-
   }
   
-  fetch(room = 'General') {
+  fetch() {
     $.ajax({
       url: this.server,
       type: 'GET',
@@ -45,13 +42,18 @@ class App {
           var roomname = _.escape(chat.roomname); 
           if (!app.roomnames[roomname]) {
             app.roomnames[roomname] = true;   
-            var $roomname = $('<option value="' + roomname + '">' + roomname + '</option>');
+            var $roomname = $('<option value="' + roomname.replace(/ /g, '_') + '">' + roomname + '</option>');
             $('#roomSelect').append($roomname);
           }
-          if (room === 'General' || roomname === room) {
-            app.renderMessage(chat);
-          }
+          app.renderMessage(chat);
         }
+        
+        var $room = $('#roomSelect').val();
+        if ($room !== 'showAll') {
+          $('.chat').hide();
+          $('.' + $room).show();
+        }
+        
       }
     });
   }
@@ -64,34 +66,47 @@ class App {
     var $message = $('<div class="chat"></div>');
     var $username = $('<h1 class="username">' + (_.escape(message.username) || 'anonymous') + '</h1>');
     var $text = $('<p class="text">' + _.escape(message.text) + '</p>');
+    var roomname = _.escape(message.roomname).replace(/ /g, '_');
     $message.append($username);
     $message.append($text);
-    $message.addClass(_.escape(message.username) || 'anonymous');
+    $message.addClass( (_.escape(message.username)).replace(/ /g, '_') || 'anonymous');
+    $message.addClass(roomname);
     $('#chats').append($message);
   }
   
   renderRoom(roomname) {
     var $node = document.createElement('p');
     $node.innerHTML = roomname;
-    
     $('#roomSelect').append($node); 
   }
   
   handleUsernameClick(username) {
-    console.log(username);
-    $('.' + username).each(function() {
+    $('.' + _.escape(username).replace(/ /g, '_')).each(function() {
       $(this).addClass('friend');
     });
   }
   
   handleSubmit(text) {
     var username = (window.location.search).substring(10);
+    var roomname = $('#roomSelect').val();
     var message = {
-      roomname: 'testroom',
+      roomname: roomname,
       text: text,
       username: username
     };
-    this.send(message);
+    
+    this.send(JSON.stringify(message));
+    // var $room = $('#roomSelect').val();
+    // console.log($room);
+    //console.log(roomname);
+    // if (roomname === 'showAll') {
+    //   $('.chat').show();
+    //   return;
+    // }
+    // if (roomname !== 'showAll') {
+    //   $('.chat').hide();
+    //   $('.' + roomname).show();
+    // }
   }
   
   
@@ -101,17 +116,8 @@ class App {
 
 var app = new App();
 
-// var test = "'Curly, Larry &amp; Moe'";
-// test = _.escape(test);
-// console.log(test);
-
 $(document).ready(function() {
   app.init();
-
-  // $('.username').on('click', function() {
-  //   console.log(this);
-  // });
-
 
   $('#chats').on('click', '.username', function() {
     app.handleUsernameClick(this.innerText);
@@ -134,10 +140,18 @@ $(document).ready(function() {
   });
   
   $('#roomSelect').on('change', function() {
-    // console.log($('#roomSelect').val());
-    app.fetch($('#roomSelect').val());
+    var $room = $('#roomSelect').val();
+    if ($room === 'newRoom') {
+      var newRoom = prompt('What do you want to name the room?');
+      return;
+    }
+    if ($room === 'showAll') {
+      $('.chat').show();
+      return;
+    }
+    $('.chat').hide();
+    $('.' + $room).show();
   });
-  
 });
 
 
