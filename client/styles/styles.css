@@ -60,13 +60,20 @@ form input[type=text] {
 }
 
 .chat {
-    padding: 5px;
+    padding: 10px;
     margin-bottom: 5px;
     background-color: #eee;
+    word-wrap: break-word;
 }
 
 .chat .username {
+    font-size: 25px;
     font-weight: 800;
+    color: blue;
+}
+
+.chat .messageText {
+    font-size: 18px;
 }
 
 .chat:hover {

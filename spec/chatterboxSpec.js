@@ -42,7 +42,6 @@ describe('chatterbox', function() {
           text: 'It\'s good to be the king',
           roomname: 'lobby'
         };
-
         app.send(message);
         ajaxOptions = typeof $.ajax.args[0][0] === 'object' ? $.ajax.args[0][0] : $.ajax.args[0][1];
         var result = ajaxOptions.data;
@@ -70,6 +69,7 @@ describe('chatterbox', function() {
     describe('chatroom behavior', function() {
       it('should be able to clear messages from the DOM', function() {
         var orig = $('#chats').html('<blink>OMG IT\'s 1998!</blink>');
+        // var orig2 = $('#chats').html('<blink>OMG IT\'s 1999!</blink>');
         app.clearMessages();
         expect($('#chats').children().length).to.equal(0);
       });
