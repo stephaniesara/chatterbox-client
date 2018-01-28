@@ -54,6 +54,10 @@ html {
     line-height: 13px;
 }
 
+#roomSelect {
+    width: 150px;
+}
+
 form {
     padding: 20px;
     padding-left: 0;
@@ -75,13 +79,13 @@ form input[type=text] {
 }
 
 .chat .username {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 800;
     color: blue;
 }
 
 .chat .messageText {
-    font-size: 18px;
+    font-size: 12px;
 }
 
 .chat:hover {
