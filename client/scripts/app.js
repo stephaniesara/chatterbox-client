@@ -9,6 +9,16 @@ class App {
     this.fetch();
   }
 
+  _displayRoom() {
+    var $room = $('#roomSelect').val();
+    if ($room !== 'showAll') {
+      $('.chat').hide();
+      $('.' + $room).show();
+    } else {
+      $('.chat').show(); 
+    }
+  }
+
   send(message) {
     $.ajax({
       url: this.server,
@@ -32,40 +42,48 @@ class App {
       data: {
         order: '-createdAt'
       },
-      success: function(data) {
-        console.log('chatterbox: Data fetched');
-        $('#chats').html('');
-        var chats = data.results;
-        
-        for (var i = 0; i < chats.length; i++) {
-          var chat = chats[i];
-          var roomname = _.escape(chat.roomname); 
-          if (!app.roomnames[roomname]) {
-            app.roomnames[roomname] = true;   
-            var $roomname = $('<option value="' + roomname.replace(/ /g, '_') + '">' + roomname + '</option>');
-            $('#roomSelect').append($roomname);
-          }
-          app.renderMessage(chat);
-        }
-        
-        var $room = $('#roomSelect').val();
-        if ($room !== 'showAll') {
-          $('.chat').hide();
-          $('.' + $room).show();
-        }
-        
-      }
+      success: this._fetchSuccess.bind(this)
     });
   }
   
+  _addRoom(roomname) {
+    this.roomnames[roomname] = true;   
+    var $roomname = $('<option value="' + roomname.replace(/ /g, '_') + '">' + roomname + '</option>');
+    $('#roomSelect').append($roomname);
+  }
+  
+  _fetchSuccess (data) {
+    console.log('chatterbox: Data fetched');
+    $('#chats').html('');
+    var chatsArr = data.results;
+    
+    for (var i = 0; i < chatsArr.length; i++) {
+      var chat = chatsArr[i];
+      var roomname = _.escape(chat.roomname); 
+      if (!this.roomnames[roomname]) {
+        this._addRoom(roomname);
+      }
+      this.renderMessage(chat);
+    }
+    
+    this._displayRoom();
+    
+    
+    for (var friend in app.friendsList) {
+      $('.' + friend).each(function() {
+        $(this).addClass('friend');
+      });
+    }
+  }
+    
   clearMessages() {
     $('#chats').children().remove();
   }
   
   renderMessage(message) {
     var $message = $('<div class="chat"></div>');
-    var $username = $('<h1 class="username">' + (_.escape(message.username) || 'anonymous') + '</h1>');
-    var $text = $('<p class="text">' + _.escape(message.text) + '</p>');
+    var $username = $('<p class="username">' + (_.escape(message.username) || 'anonymous') + '</p>');
+    var $text = $('<p class="messageText">' + _.escape(message.text) + '</p>');
     var roomname = _.escape(message.roomname).replace(/ /g, '_');
     $message.append($username);
     $message.append($text);
@@ -84,6 +102,9 @@ class App {
     $('.' + _.escape(username).replace(/ /g, '_')).each(function() {
       $(this).addClass('friend');
     });
+    if (!this.friendsList[username.replace(/ /g, '_')]) {
+      this.friendsList[username.replace(/ /g, '_')] = true;
+    }
   }
   
   handleSubmit(text) {
@@ -96,18 +117,8 @@ class App {
     };
     
     this.send(JSON.stringify(message));
-    // var $room = $('#roomSelect').val();
-    // console.log($room);
-    //console.log(roomname);
-    // if (roomname === 'showAll') {
-    //   $('.chat').show();
-    //   return;
-    // }
-    // if (roomname !== 'showAll') {
-    //   $('.chat').hide();
-    //   $('.' + roomname).show();
-    // }
   }
+  
   
   
 }
@@ -134,8 +145,6 @@ $(document).ready(function() {
   });
   
   $('#refresh').on('click', function() {
-    var $chats = $('#chats');
-    $chats.html('');
     app.fetch();
   });
   
@@ -143,14 +152,12 @@ $(document).ready(function() {
     var $room = $('#roomSelect').val();
     if ($room === 'newRoom') {
       var newRoom = prompt('What do you want to name the room?');
-      return;
+      if (!app.roomnames[newRoom]) {
+        app._addRoom(newRoom);
+      }
+      $('#roomSelect').val(newRoom);
     }
-    if ($room === 'showAll') {
-      $('.chat').show();
-      return;
-    }
-    $('.chat').hide();
-    $('.' + $room).show();
+    app._displayRoom();
   });
 });
 
